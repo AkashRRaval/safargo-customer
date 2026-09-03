@@ -373,13 +373,136 @@ class _LoginScreenState extends State<LoginScreen> {
                       ? () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => SafarGoBaseHome(phoneNumber: _phoneController.text),
+                              builder: (context) => OtpVerificationScreen(phoneNumber: _phoneController.text),
                             ),
                           );
                         }
                       : null,
                   child: const Text(
                     'Get OTP',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class OtpVerificationScreen extends StatefulWidget {
+  final String phoneNumber;
+  const OtpVerificationScreen({super.key, required this.phoneNumber});
+
+  @override
+  State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
+}
+
+class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
+  final List<TextEditingController> _controllers = List.generate(4, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+
+  bool get _isOtpComplete => _controllers.every((c) => c.text.isNotEmpty);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF212121)),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Verify Phone Number',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF212121),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Enter the 4-digit code sent to +91 ${widget.phoneNumber}',
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(
+                  4,
+                  (index) => SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: TextField(
+                      controller: _controllers[index],
+                      focusNode: _focusNodes[index],
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      maxLength: 1,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        counterText: '',
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF00C853), width: 2),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        if (value.isNotEmpty && index < 3) {
+                          _focusNodes[index + 1].requestFocus();
+                        } else if (value.isEmpty && index > 0) {
+                          _focusNodes[index - 1].requestFocus();
+                        }
+                        setState(() {});
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isOtpComplete ? const Color(0xFF00C853) : Colors.grey.shade300,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _isOtpComplete
+                      ? () {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (context) => SafarGoBaseHome(phoneNumber: widget.phoneNumber),
+                            ),
+                            (route) => false,
+                          );
+                        }
+                      : null,
+                  child: const Text(
+                    'Verify & Continue',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,
@@ -438,7 +561,7 @@ class SafarGoBaseHome extends StatelessWidget {
             if (phoneNumber.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                'Phone: +91 $phoneNumber',
+                'Verified Phone: +91 $phoneNumber',
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -448,7 +571,4 @@ class SafarGoBaseHome extends StatelessWidget {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
+        
