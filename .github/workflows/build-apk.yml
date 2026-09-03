@@ -3,41 +3,49 @@ name: SafarGo Customer Build Pipeline
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  build-android:
-    name: Build Android Release APK
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: '17'
+    - name: Set up Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.22.0'
-          channel: 'stable'
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.22.x'
+        channel: 'stable'
 
-      - name: Create Flutter Project Structure
-        run: flutter create . --platforms=android --org com.safargo.customer --project-name safargo_customer
+    - name: Create Flutter Project Structure
+      run: |
+        if [ ! -d "android" ]; then
+          flutter create . --org com.example --project-name safargo_customer
+        fi
 
-      - name: Get Dependencies
-        run: flutter pub get
+    - name: Get Dependencies
+      run: flutter pub get
 
-      - name: Build Release APK
-        run: flutter build apk --release --no-tree-shake-icons
+    - name: Set Android minSdkVersion
+      run: |
+        sed -i 's/minSdkVersion .*/minSdkVersion 23/' android/app/build.gradle || true
+        sed -i 's/flutter.minSdkVersion/23/' android/app/build.gradle || true
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: safargo-customer-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-          
+    - name: Build Release APK
+      run: flutter build apk --release --no-tree-shake-icons
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release
+        path: build/app/outputs/flutter-apk/app-release.apk
+        
