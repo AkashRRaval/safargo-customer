@@ -571,5 +571,7 @@ class SafarGoBaseHome extends StatelessWidget {
             ],
           ],
         ),
-        } 
-        }
+      ),
+    );
+  }
+}
