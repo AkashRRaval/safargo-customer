@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const SafarGoApp());
@@ -117,17 +118,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {
       'title': 'Fast & Safe Rides',
       'subtitle': 'Book Bike, Auto, or Cab instantly with certified drivers in your city.',
-      'icon': 'two_wheeler',
     },
     {
       'title': 'Fair Pricing',
       'subtitle': 'Get transparent fares with option to negotiate rates directly with drivers.',
-      'icon': 'payments',
     },
     {
       'title': '24/7 Safety First',
       'subtitle': 'Live trip tracking, SOS emergency button, and trusted contacts feature.',
-      'icon': 'shield',
     },
   ];
 
@@ -142,7 +140,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: TextButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (context) => const SafarGoBaseHome()),
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
                   );
                 },
                 child: const Text('Skip', style: TextStyle(color: Colors.grey, fontSize: 16)),
@@ -236,7 +234,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   onPressed: () {
                     if (_currentPage == _onboardingData.length - 1) {
                       Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => const SafarGoBaseHome()),
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
                       );
                     } else {
                       _pageController.nextPage(
@@ -263,8 +261,145 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _phoneController = TextEditingController();
+  bool _isPhoneValid = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00C853).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.phone_android_rounded,
+                  color: Color(0xFF00C853),
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Enter Mobile Number',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF212121),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'We will send an OTP to verify your account',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              const SizedBox(height: 32),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _isPhoneValid ? const Color(0xFF00C853) : Colors.grey.shade300,
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Text(
+                      '🇮🇳  +91',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF212121),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      height: 24,
+                      width: 1,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        maxLength: 10,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        decoration: const InputDecoration(
+                          hintText: 'Enter 10-digit number',
+                          border: InputBorder.none,
+                          counterText: '',
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _isPhoneValid = value.length == 10;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isPhoneValid ? const Color(0xFF00C853) : Colors.grey.shade300,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _isPhoneValid
+                      ? () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => SafarGoBaseHome(phoneNumber: _phoneController.text),
+                            ),
+                          );
+                        }
+                      : null,
+                  child: const Text(
+                    'Get OTP',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class SafarGoBaseHome extends StatelessWidget {
-  const SafarGoBaseHome({super.key});
+  final String phoneNumber;
+  const SafarGoBaseHome({super.key, this.phoneNumber = ''});
 
   @override
   Widget build(BuildContext context) {
@@ -300,14 +435,17 @@ class SafarGoBaseHome extends StatelessWidget {
                 color: Color(0xFF212121),
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Your Trusted Ride Partner',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
+            if (phoneNumber.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Phone: +91 $phoneNumber',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF00C853),
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
