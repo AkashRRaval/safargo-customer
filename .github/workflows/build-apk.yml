@@ -26,25 +26,29 @@ jobs:
         flutter-version: '3.22.x'
         channel: 'stable'
 
-    - name: Clean & Re-create Flutter Android Structure
+    - name: Recreate Android Project
       run: |
         rm -rf android
         flutter create . --org com.example --project-name safargo_customer --platforms android
 
-    - name: Configure Android for Firebase
+    - name: Setup Firebase Android Configuration
       run: |
         mkdir -p android/app
-        
-        # Copy google-services.json to android/app
         cp google-services.json android/app/ 2>/dev/null || true
         
-        # Inject Google Services dependency in Root build.gradle
-        sed -i "s/dependencies {/dependencies {\n        classpath 'com.google.gms:google-services:4.3.15'/" android/build.gradle || true
+        # Inject classpath in android/build.gradle
+        python3 -c "
+        with open('android/build.gradle', 'r') as f:
+            content = f.read()
+        content = content.replace('dependencies {', 'dependencies {\n        classpath \"com.google.gms:google-services:4.3.15\"')
+        with open('android/build.gradle', 'w') as f:
+            f.write(content)
+        "
 
-        # Apply Google Services plugin in App build.gradle
-        echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle || true
+        # Apply plugin in android/app/build.gradle
+        echo 'apply plugin: "com.google.gms.google-services"' >> android/app/build.gradle
 
-        # Set minSdkVersion to 23
+        # Fix minSdkVersion to 23
         sed -i 's/minSdkVersion .*/minSdkVersion 23/' android/app/build.gradle || true
         sed -i 's/flutter.minSdkVersion/23/' android/app/build.gradle || true
 
