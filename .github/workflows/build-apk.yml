@@ -1,4 +1,4 @@
-name: Build SafarGo Customer APK
+name: SafarGo Customer Build Pipeline
 
 on:
   push:
@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-android:
+    name: Build Android Release APK
     runs-on: ubuntu-latest
 
     steps:
@@ -19,22 +20,22 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Set up Flutter Engine
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
           channel: 'stable'
 
-      - name: Create Clean Android Structure
+      - name: Create Flutter Project Structure
         run: flutter create . --platforms=android --org com.safargo.customer --project-name safargo_customer
 
-      - name: Fetch Dependencies
+      - name: Get Dependencies
         run: flutter pub get
 
-      - name: Compile Release APK
+      - name: Build Release APK
         run: flutter build apk --release --no-tree-shake-icons
 
-      - name: Upload APK Package
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: safargo-customer-apk
