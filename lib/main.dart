@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               child: Column(
-                mainAxisSize: minAxisSize,
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
@@ -171,4 +171,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
