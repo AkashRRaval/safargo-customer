@@ -495,7 +495,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       ? () {
                           Navigator.of(context).pushAndRemoveUntil(
                             MaterialPageRoute(
-                              builder: (context) => SafarGoBaseHome(phoneNumber: widget.phoneNumber),
+                              builder: (context) => SafarGoHomeScreen(phoneNumber: widget.phoneNumber),
                             ),
                             (route) => false,
                           );
@@ -520,57 +520,190 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 }
 
-class SafarGoBaseHome extends StatelessWidget {
+class SafarGoHomeScreen extends StatefulWidget {
   final String phoneNumber;
-  const SafarGoBaseHome({super.key, this.phoneNumber = ''});
+  const SafarGoHomeScreen({super.key, required this.phoneNumber});
+
+  @override
+  State<SafarGoHomeScreen> createState() => _SafarGoHomeScreenState();
+}
+
+class _SafarGoHomeScreenState extends State<SafarGoHomeScreen> {
+  int _selectedVehicle = 0;
+  final TextEditingController _pickupController = TextEditingController(text: 'Current Location');
+  final TextEditingController _dropController = TextEditingController();
+
+  final List<Map<String, dynamic>> _vehicles = [
+    {'name': 'Bike', 'icon': Icons.two_wheeler_rounded, 'price': '₹40', 'time': '2 mins away'},
+    {'name': 'Auto', 'icon': Icons.electric_rickshaw_rounded, 'price': '₹75', 'time': '3 mins away'},
+    {'name': 'Cab Mini', 'icon': Icons.directions_car_rounded, 'price': '₹140', 'time': '5 mins away'},
+    {'name': 'Cab Sedan', 'icon': Icons.local_taxi_rounded, 'price': '₹190', 'time': '6 mins away'},
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'SafarGo',
-          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2),
-        ),
+        title: const Text('SafarGo', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_pin_rounded),
+            onPressed: () {},
+          ),
+        ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
+      body: Stack(
+        children: [
+          // Simulated Map Background
+          Container(
+            color: Colors.grey.shade200,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.map_rounded, size: 80, color: Colors.grey.shade400),
+                  const SizedBox(height: 8),
+                  Text('Interactive Map View', style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+          ),
+
+          // Search & Ride Panel
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF00C853).withOpacity(0.1),
-                shape: BoxShape.circle,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
+                ],
               ),
-              child: const Icon(
-                Icons.directions_car_rounded,
-                size: 64,
-                color: Color(0xFF00C853),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Location Input Card
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.my_location_rounded, color: Color(0xFF00C853)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: _pickupController,
+                                decoration: const InputDecoration(
+                                  hintText: 'Pickup Location',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 16),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_rounded, color: Colors.redAccent),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: _dropController,
+                                decoration: const InputDecoration(
+                                  hintText: 'Where to go?',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                  const Text('Select Ride', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+
+                  // Vehicle Selector Horizontal List
+                  SizedBox(
+                    height: 100,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _vehicles.length,
+                      itemBuilder: (context, index) {
+                        final v = _vehicles[index];
+                        final isSelected = _selectedVehicle == index;
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedVehicle = index),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: const EdgeInsets.only(right: 12),
+                            padding: const EdgeInsets.all(12),
+                            width: 105,
+                            decoration: BoxDecoration(
+                              color: isSelected ? const Color(0xFF00C853).withOpacity(0.1) : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isSelected ? const Color(0xFF00C853) : Colors.grey.shade300,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(v['icon'] as IconData, color: isSelected ? const Color(0xFF00C853) : Colors.black87),
+                                const SizedBox(height: 6),
+                                Text(v['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                Text(v['price'] as String, style: const TextStyle(color: Color(0xFF00C853), fontWeight: FontWeight.bold, fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00C853),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Searching for nearest ${_vehicles[_selectedVehicle]['name']} driver...'),
+                            backgroundColor: const Color(0xFF00C853),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Book ${_vehicles[_selectedVehicle]['name']}',
+                        style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'Welcome to SafarGo',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF212121),
-              ),
-            ),
-            if (phoneNumber.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Verified Phone: +91 $phoneNumber',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF00C853),
-                ),
-              ),
-            ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
