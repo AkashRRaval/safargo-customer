@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
   runApp(const SafarGoCustomerApp());
 }
 
@@ -38,7 +37,25 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
   
   bool _isLoading = false;
   bool _otpSent = false;
+  bool _firebaseReady = false;
   String _verificationId = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _setupFirebase();
+  }
+
+  Future<void> _setupFirebase() async {
+    try {
+      await Firebase.initializeApp();
+      if (mounted) {
+        setState(() => _firebaseReady = true);
+      }
+    } catch (e) {
+      debugPrint("Firebase Init Deferred Error: $e");
+    }
+  }
 
   @override
   void dispose() {
@@ -53,6 +70,14 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a valid 10-digit mobile number')),
       );
+      return;
+    }
+
+    if (!_firebaseReady) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Firebase connecting... Please try again in a moment.')),
+      );
+      await _setupFirebase();
       return;
     }
 
@@ -195,4 +220,3 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
     );
   }
 }
-
