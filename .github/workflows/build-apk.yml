@@ -36,7 +36,6 @@ jobs:
         mkdir -p android/app
         cp google-services.json android/app/ 2>/dev/null || true
         
-        # Inject classpath in android/build.gradle
         python3 -c "
         with open('android/build.gradle', 'r') as f:
             content = f.read()
@@ -45,10 +44,8 @@ jobs:
             f.write(content)
         "
 
-        # Apply plugin in android/app/build.gradle
         echo 'apply plugin: "com.google.gms.google-services"' >> android/app/build.gradle
 
-        # Fix minSdkVersion to 23
         sed -i 's/minSdkVersion .*/minSdkVersion 23/' android/app/build.gradle || true
         sed -i 's/flutter.minSdkVersion/23/' android/app/build.gradle || true
 
