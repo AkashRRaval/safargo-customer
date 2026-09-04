@@ -38,6 +38,7 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
   bool _isLoading = false;
   bool _otpSent = false;
   bool _firebaseReady = false;
+  String? _firebaseError;
   String _verificationId = '';
 
   @override
@@ -50,9 +51,17 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
     try {
       await Firebase.initializeApp();
       if (mounted) {
-        setState(() => _firebaseReady = true);
+        setState(() {
+          _firebaseReady = true;
+          _firebaseError = null;
+        });
       }
     } catch (e) {
+      if (mounted) {
+        setState(() {
+          _firebaseError = e.toString();
+        });
+      }
       debugPrint("Firebase Init Deferred Error: $e");
     }
   }
@@ -75,7 +84,11 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
 
     if (!_firebaseReady) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Firebase connecting... Please try again in a moment.')),
+        SnackBar(
+          content: Text(_firebaseError != null 
+              ? 'Firebase Error: $_firebaseError' 
+              : 'Connecting to Firebase... Please try again.'),
+        ),
       );
       await _setupFirebase();
       return;
