@@ -8,7 +8,7 @@ void main() async {
   try {
     await Firebase.initializeApp();
   } catch (e) {
-    debugPrint("Firebase init error: $e");
+    debugPrint("Firebase Initialization Error: $e");
   }
 
   runApp(const SafarGoCustomerApp());
