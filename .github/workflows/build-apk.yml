@@ -26,27 +26,6 @@ jobs:
         flutter-version: '3.22.x'
         channel: 'stable'
 
-    - name: Recreate Android Project
-      run: |
-        rm -rf android
-        flutter create . --org com.example --project-name safargo_customer --platforms android
-
-    - name: Configure Native Firebase Android
-      run: |
-        mkdir -p android/app
-        cp google-services.json android/app/google-services.json 2>/dev/null || true
-        
-        # Add google-services plugin using gradle settings injection
-        echo 'buildscript { repositories { google() } dependencies { classpath "com.google.gms:google-services:4.3.15" } }' > temp.gradle
-        cat android/build.gradle >> temp.gradle
-        mv temp.gradle android/build.gradle
-
-        # Apply plugin to app build.gradle
-        echo 'apply plugin: "com.google.gms.google-services"' >> android/app/build.gradle
-
-        # Set minimum SDK version in local.properties / build.gradle safely
-        echo "flutter.minSdkVersion=23" >> android/local.properties
-
     - name: Get Dependencies
       run: flutter pub get
 
