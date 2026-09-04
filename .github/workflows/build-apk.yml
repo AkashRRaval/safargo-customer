@@ -31,18 +31,18 @@ jobs:
         rm -rf android
         flutter create . --org com.example --project-name safargo_customer --platforms android
 
-    - name: Setup Firebase Config
+    - name: Setup Firebase Android Configuration
       run: |
         mkdir -p android/app
-        cp google-services.json android/app/ 2>/dev/null || true
+        cp google-services.json android/app/google-services.json 2>/dev/null || true
         
-        # Inject dependency in root android/build.gradle
+        # Inject Google Services dependency in root build.gradle
         sed -i '/dependencies {/a \        classpath "com.google.gms:google-services:4.3.15"' android/build.gradle
         
         # Apply plugin in android/app/build.gradle
         sed -i '/apply plugin: "com.android.application"/a apply plugin: "com.google.gms.google-services"' android/app/build.gradle
 
-        # Fix minSdkVersion
+        # Fix minSdkVersion to 23
         sed -i 's/minSdkVersion .*/minSdkVersion 23/' android/app/build.gradle || true
         sed -i 's/flutter.minSdkVersion/23/' android/app/build.gradle || true
 
