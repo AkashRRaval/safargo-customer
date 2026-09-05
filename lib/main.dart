@@ -20,7 +20,71 @@ class SafarGoCustomerApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E88E5)),
         useMaterial3: true,
       ),
-      home: const MobileAuthScreen(),
+      home: const AuthWrapper(),
+    );
+  }
+}
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _initialized = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _initFirebase();
+  }
+
+  Future<void> _initFirebase() async {
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      if (mounted) setState(() => _initialized = true);
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Text('Firebase Error: $_error', style: const TextStyle(color: Colors.red)),
+          ),
+        ),
+      );
+    }
+    if (!_initialized) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.active) {
+          final user = snapshot.data;
+          if (user == null) {
+            return const MobileAuthScreen();
+          }
+          return HomeScreen(user: user);
+        }
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      },
     );
   }
 }
@@ -38,36 +102,7 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
   
   bool _isLoading = false;
   bool _otpSent = false;
-  bool _firebaseReady = false;
-  String? _firebaseError;
   String _verificationId = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _setupFirebase();
-  }
-
-  Future<void> _setupFirebase() async {
-    try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      if (mounted) {
-        setState(() {
-          _firebaseReady = true;
-          _firebaseError = null;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _firebaseError = e.toString();
-        });
-      }
-      debugPrint("Firebase Init Error: $e");
-    }
-  }
 
   @override
   void dispose() {
@@ -82,18 +117,6 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a valid 10-digit mobile number')),
       );
-      return;
-    }
-
-    if (!_firebaseReady) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_firebaseError != null 
-              ? 'Firebase Error: $_firebaseError' 
-              : 'Connecting to Firebase... Please try again.'),
-        ),
-      );
-      await _setupFirebase();
       return;
     }
 
@@ -147,13 +170,6 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
         smsCode: otp,
       );
       await FirebaseAuth.instance.signInWithCredential(credential);
-      setState(() => _isLoading = false);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Phone Verified Successfully!')),
-        );
-      }
     } catch (e) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -229,6 +245,86 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
                         ),
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  final User user;
+  const HomeScreen({super.key, required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('SafarGo', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF1E88E5),
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => FirebaseAuth.instance.signOut(),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                color: const Color(0xFFE3F2FD),
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      const CircleAvatar(
+                        backgroundColor: Color(0xFF1E88E5),
+                        child: Icon(Icons.person, color: Colors.white),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Welcome Customer!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(user.phoneNumber ?? 'Logged in', style: const TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.search, color: Color(0xFF1E88E5)),
+                    SizedBox(width: 12),
+                    Text('Where to?', style: TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              const Center(
+                child: Text(
+                  'Map & Ride Booking Engine Coming Next 🚕',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
