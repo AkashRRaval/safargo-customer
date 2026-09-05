@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'firebase_options.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,7 +50,9 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
 
   Future<void> _setupFirebase() async {
     try {
-      await Firebase.initializeApp();
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       if (mounted) {
         setState(() {
           _firebaseReady = true;
@@ -62,7 +65,7 @@ class _MobileAuthScreenState extends State<MobileAuthScreen> {
           _firebaseError = e.toString();
         });
       }
-      debugPrint("Firebase Init Deferred Error: $e");
+      debugPrint("Firebase Init Error: $e");
     }
   }
 
