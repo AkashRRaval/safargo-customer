@@ -32,6 +32,30 @@ jobs:
         mkdir -p android/app
         cp google-services.json android/app/google-services.json
 
+    - name: Generate Firebase Options
+      run: |
+        python3 -c '
+        import json
+        with open("google-services.json") as f:
+            d = json.load(f)
+        p = d["project_info"]
+        c = d["client"][0]
+        lines = [
+            "import \"package:firebase_core/firebase_core.dart\" show FirebaseOptions;\n\n",
+            "class DefaultFirebaseOptions {\n",
+            "  static const FirebaseOptions currentPlatform = FirebaseOptions(\n",
+            "    apiKey: \"" + c["api_key"][0]["current_key"] + "\",\n",
+            "    appId: \"" + c["client_info"]["mobilesdk_app_id"] + "\",\n",
+            "    messagingSenderId: \"" + p["project_number"] + "\",\n",
+            "    projectId: \"" + p["project_id"] + "\",\n",
+            "    storageBucket: \"" + p.get("storage_bucket", "") + "\",\n",
+            "  );\n",
+            "}\n"
+        ]
+        with open("lib/firebase_options.dart", "w") as out:
+            out.writelines(lines)
+        '
+
     - name: Get Dependencies
       run: flutter pub get
 
