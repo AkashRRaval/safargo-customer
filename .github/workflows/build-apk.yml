@@ -56,6 +56,13 @@ jobs:
             out.writelines(lines)
         '
 
+    - name: Generate Keystore & Print SHA-1
+      run: |
+        keytool -genkeypair -v -keystore android/app/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+        echo "=== YOUR SHA1 FINGERPRINT BELOW ==="
+        keytool -list -v -keystore android/app/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep "SHA1:"
+        echo "==================================="
+
     - name: Get Dependencies
       run: flutter pub get
 
